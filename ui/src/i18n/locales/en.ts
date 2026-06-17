@@ -391,6 +391,7 @@ export const en: TranslationMap = {
   },
   nav: {
     chat: "Chat",
+    accelerant: "Accelerant",
     control: "Control",
     agent: "Agent",
     settings: "Settings",
@@ -399,6 +400,7 @@ export const en: TranslationMap = {
     resize: "Resize sidebar",
   },
   tabs: {
+    accelerant: "ACCELERANT",
     agents: "Agents",
     activity: "Activity",
     overview: "Overview",
@@ -424,6 +426,7 @@ export const en: TranslationMap = {
     dreams: "Dreaming",
   },
   subtitles: {
+    accelerant: "Control center for ACCELERANT runs.",
     agents: "Workspaces, tools, identities.",
     activity: "Browser-local tool activity summaries.",
     overview: "Status, entry points, health.",

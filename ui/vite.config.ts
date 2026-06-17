@@ -267,6 +267,12 @@ export default function controlUiViteConfig(): UserConfig {
       host: true,
       port: 5173,
       strictPort: true,
+      // Dev only: forward same-origin /accelerant/* to the OpenClaw gateway
+      // (default :18789), which hosts the ACCELERANT proxy stage. In production
+      // the gateway serves the built UI same-origin, so no proxy is needed.
+      proxy: {
+        "/accelerant": process.env.OPENCLAW_GATEWAY_DEV_URL ?? "http://127.0.0.1:18789",
+      },
     },
     plugins: [
       controlUiBrowserOnlySharedModuleAliases(),

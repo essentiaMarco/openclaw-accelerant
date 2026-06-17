@@ -83,6 +83,7 @@ let sessionHistoryHttpModulePromise:
   | undefined;
 let sessionKillHttpModulePromise: Promise<typeof import("./session-kill-http.js")> | undefined;
 let toolsInvokeHttpModulePromise: Promise<typeof import("./tools-invoke-http.js")> | undefined;
+let accelerantHttpModulePromise: Promise<typeof import("./accelerant-http.js")> | undefined;
 let pluginNodeCapabilityAuthModulePromise:
   | Promise<typeof import("./server/plugin-node-capability-auth.js")>
   | undefined;
@@ -139,6 +140,11 @@ function getSessionKillHttpModule() {
 function getToolsInvokeHttpModule() {
   toolsInvokeHttpModulePromise ??= import("./tools-invoke-http.js");
   return toolsInvokeHttpModulePromise;
+}
+
+function getAccelerantHttpModule() {
+  accelerantHttpModulePromise ??= import("./accelerant-http.js");
+  return accelerantHttpModulePromise;
 }
 
 function getPluginNodeCapabilityAuthModule() {
@@ -219,6 +225,10 @@ function isOpenResponsesPath(pathname: string): boolean {
 
 function isToolsInvokePath(pathname: string): boolean {
   return pathname === "/tools/invoke";
+}
+
+function isAccelerantPath(pathname: string): boolean {
+  return pathname === "/accelerant" || pathname.startsWith("/accelerant/");
 }
 
 function isManagedOutgoingImagePath(pathname: string): boolean {
@@ -637,6 +647,21 @@ export function createGatewayHttpServer(opts: {
               trustedProxies,
               allowRealIpFallback,
               rateLimiter,
+            }),
+        });
+      }
+      if (isAccelerantPath(scopedRequestPath)) {
+        // Same-origin proxy to a local ACCELERANT API. Must run before the
+        // Control UI SPA catch-all or the fallback would swallow /accelerant/*.
+        requestStages.push({
+          name: "accelerant",
+          run: async () =>
+            (await getAccelerantHttpModule()).handleAccelerantHttpRequest(req, res, {
+              auth: resolvedAuthValue,
+              trustedProxies,
+              allowRealIpFallback,
+              rateLimiter,
+              config: configSnapshot,
             }),
         });
       }

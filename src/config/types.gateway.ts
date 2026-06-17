@@ -151,6 +151,14 @@ export type GatewayControlUiConfig = {
   allowInsecureAuth?: boolean;
   /** DANGEROUS: Disable device identity checks for the Control UI (default: false). */
   dangerouslyDisableDeviceAuth?: boolean;
+  /**
+   * Base URL of the local ACCELERANT API the Control UI proxies to via the
+   * same-origin /accelerant/* gateway route. Must target a loopback host
+   * (127.0.0.1/localhost/::1). Overridden by the OPENCLAW_ACCELERANT_API_URL
+   * env var and the per-request x-accelerant-base-url header (loopback only).
+   * Defaults to http://127.0.0.1:7317 when unset.
+   */
+  accelerantApiBaseUrl?: string;
 };
 
 /** Gateway authentication strategy for WebSocket and HTTP clients. */

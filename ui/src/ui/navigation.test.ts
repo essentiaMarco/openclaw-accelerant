@@ -29,6 +29,7 @@ describe("iconForTab", () => {
   it("returns stable icons for every tab", () => {
     expect(Object.fromEntries(ALL_TABS.map((tab) => [tab, iconForTab(tab)]))).toEqual({
       chat: "messageSquare",
+      accelerant: "zap",
       overview: "barChart",
       activity: "activity",
       workboard: "folder",
@@ -65,6 +66,7 @@ describe("titleForTab", () => {
   it("returns expected titles for every tab", () => {
     expect(Object.fromEntries(ALL_TABS.map((tab) => [tab, titleForTab(tab)]))).toEqual({
       chat: "Chat",
+      accelerant: "ACCELERANT",
       overview: "Overview",
       activity: "Activity",
       workboard: "Workboard",
@@ -95,6 +97,7 @@ describe("subtitleForTab", () => {
   it("returns expected subtitles for every tab", () => {
     expect(Object.fromEntries(ALL_TABS.map((tab) => [tab, subtitleForTab(tab)]))).toEqual({
       chat: "Gateway chat for quick interventions.",
+      accelerant: "Control center for ACCELERANT runs.",
       overview: "Status, entry points, health.",
       activity: "Browser-local tool activity summaries.",
       workboard: "Agent work queue and session handoff.",
@@ -225,7 +228,13 @@ describe("inferBasePathFromPathname", () => {
 
 describe("TAB_GROUPS", () => {
   it("contains all expected groups", () => {
-    expect(TAB_GROUPS.map((g) => g.label)).toEqual(["chat", "control", "agent", "settings"]);
+    expect(TAB_GROUPS.map((g) => g.label)).toEqual([
+      "chat",
+      "accelerant",
+      "control",
+      "agent",
+      "settings",
+    ]);
   });
 
   it("all tabs are unique", () => {

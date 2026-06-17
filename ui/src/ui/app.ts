@@ -95,6 +95,7 @@ import {
 import type { ChatRunUiStatus } from "./chat/run-lifecycle.ts";
 import type { ChatMessageCache } from "./chat/session-message-cache.ts";
 import type { ChatSideResult } from "./chat/side-result.ts";
+import type { ControlCenterState } from "./controllers/accelerant.ts";
 import {
   loadToolsEffective as loadToolsEffectiveInternal,
   refreshVisibleToolsEffectiveForCurrentSession as refreshVisibleToolsEffectiveForCurrentSessionInternal,
@@ -460,6 +461,10 @@ export class OpenClawApp extends LitElement {
   @state() presenceError: string | null = null;
   @state() presenceStatus: string | null = null;
 
+  @state() accelerantLoading = false;
+  @state() accelerantError: string | null = null;
+  @state() accelerantData: ControlCenterState | null = null;
+
   @state() agentsLoading = false;
   @state() agentsList: AgentsListResult | null = null;
   @state() agentsError: string | null = null;
@@ -724,6 +729,7 @@ export class OpenClawApp extends LitElement {
   nodesPollInterval: number | null = null;
   logsPollInterval: number | null = null;
   debugPollInterval: number | null = null;
+  accelerantPollInterval: number | null = null;
   sessionsChangedReloadTimer: number | ReturnType<typeof globalThis.setTimeout> | null = null;
   logsScrollFrame: number | null = null;
   activityScrollFrame: number | null = null;

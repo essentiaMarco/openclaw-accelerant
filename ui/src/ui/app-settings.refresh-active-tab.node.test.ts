@@ -61,9 +61,12 @@ const mocks = vi.hoisted(() => ({
   startDebugPollingMock: vi.fn(),
   startLogsPollingMock: vi.fn(),
   startNodesPollingMock: vi.fn(),
+  startAccelerantPollingMock: vi.fn(),
   stopDebugPollingMock: vi.fn(),
   stopLogsPollingMock: vi.fn(),
   stopNodesPollingMock: vi.fn(),
+  stopAccelerantPollingMock: vi.fn(),
+  loadAccelerantControlCenterMock: vi.fn(async () => {}),
 }));
 
 vi.mock("./app-chat.ts", () => ({
@@ -73,9 +76,14 @@ vi.mock("./app-polling.ts", () => ({
   startDebugPolling: mocks.startDebugPollingMock,
   startLogsPolling: mocks.startLogsPollingMock,
   startNodesPolling: mocks.startNodesPollingMock,
+  startAccelerantPolling: mocks.startAccelerantPollingMock,
   stopDebugPolling: mocks.stopDebugPollingMock,
   stopLogsPolling: mocks.stopLogsPollingMock,
   stopNodesPolling: mocks.stopNodesPollingMock,
+  stopAccelerantPolling: mocks.stopAccelerantPollingMock,
+}));
+vi.mock("./controllers/accelerant.ts", () => ({
+  loadAccelerantControlCenter: mocks.loadAccelerantControlCenterMock,
 }));
 vi.mock("./app-scroll.ts", () => ({
   scheduleChatScroll: mocks.scheduleChatScrollMock,

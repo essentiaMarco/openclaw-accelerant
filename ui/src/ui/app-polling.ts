@@ -1,4 +1,6 @@
 // Control UI module implements app polling behavior.
+import type { AccelerantState } from "./controllers/accelerant.ts";
+import { loadAccelerantControlCenter } from "./controllers/accelerant.ts";
 import type { DebugState } from "./controllers/debug.ts";
 import { loadDebug } from "./controllers/debug.ts";
 import type { LogsState } from "./controllers/logs.ts";
@@ -10,8 +12,11 @@ type PollingHost = {
   nodesPollInterval: number | null;
   logsPollInterval: number | null;
   debugPollInterval: number | null;
+  accelerantPollInterval: number | null;
   tab: string;
 };
+
+export const ACCELERANT_ACTIVE_POLL_INTERVAL_MS = 3000;
 
 export const NODES_ACTIVE_POLL_INTERVAL_MS = 30_000;
 
@@ -73,4 +78,24 @@ export function stopDebugPolling(host: PollingHost) {
   }
   clearInterval(host.debugPollInterval);
   host.debugPollInterval = null;
+}
+
+export function startAccelerantPolling(host: PollingHost) {
+  if (host.accelerantPollInterval != null) {
+    return;
+  }
+  host.accelerantPollInterval = window.setInterval(() => {
+    if (host.tab !== "accelerant") {
+      return;
+    }
+    void loadAccelerantControlCenter(host as unknown as AccelerantState);
+  }, ACCELERANT_ACTIVE_POLL_INTERVAL_MS);
+}
+
+export function stopAccelerantPolling(host: PollingHost) {
+  if (host.accelerantPollInterval == null) {
+    return;
+  }
+  clearInterval(host.accelerantPollInterval);
+  host.accelerantPollInterval = null;
 }

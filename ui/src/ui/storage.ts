@@ -98,6 +98,7 @@ export type UiSettings = {
   textScale?: TextScaleStop; // Browser-local text scale percentage
   customTheme?: ImportedCustomTheme;
   locale?: string;
+  accelerantApiUrl?: string; // Loopback ACCELERANT API base URL for the cockpit proxy
 };
 
 export type { LocalUserIdentity } from "./user-identity.ts";
@@ -254,6 +255,7 @@ export function loadSettings(): UiSettings {
     recentSessionsCollapsed: false,
     borderRadius: 50,
     textScale: 100,
+    accelerantApiUrl: "http://127.0.0.1:7317",
   };
 
   try {
@@ -321,6 +323,8 @@ export function loadSettings(): UiSettings {
       textScale: normalizeTextScale(parsed.textScale, defaults.textScale),
       customTheme: customTheme ?? undefined,
       locale: isSupportedLocale(parsed.locale) ? parsed.locale : undefined,
+      accelerantApiUrl:
+        normalizeOptionalString(parsed.accelerantApiUrl) ?? defaults.accelerantApiUrl,
     };
     if ("token" in parsed) {
       persistSettings(settings);
@@ -501,6 +505,7 @@ function persistSettings(next: UiSettings) {
     ...(next.customTheme ? { customTheme: next.customTheme } : {}),
     sessionsByGateway,
     ...(next.locale ? { locale: next.locale } : {}),
+    ...(next.accelerantApiUrl ? { accelerantApiUrl: next.accelerantApiUrl } : {}),
   };
   const serialized = JSON.stringify(persisted);
   try {

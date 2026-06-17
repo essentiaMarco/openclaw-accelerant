@@ -154,6 +154,7 @@ describe("loadSettings default gateway URL derivation", () => {
           lastActiveSessionKey: "agent",
         },
       },
+      accelerantApiUrl: "http://127.0.0.1:7317",
     });
     expect(sessionStorage.length).toBe(0);
   });

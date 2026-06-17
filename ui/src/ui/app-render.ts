@@ -42,6 +42,15 @@ import {
   recordControlUiRenderTiming,
   roundedControlUiDurationMs,
 } from "./control-ui-performance.ts";
+import {
+  approveRun as approveAccelerantRun,
+  loadAccelerantControlCenter,
+  retryRun as retryAccelerantRun,
+  startBatch as startAccelerantBatch,
+  startCustomGoal as startAccelerantGoal,
+  startHuntrAttempt as startAccelerantHuntrAttempt,
+  stopRun as stopAccelerantRun,
+} from "./controllers/accelerant.ts";
 import { loadAgentFileContent, loadAgentFiles, saveAgentFile } from "./controllers/agent-files.ts";
 import { loadAgentIdentities, loadAgentIdentity } from "./controllers/agent-identity.ts";
 import { loadAgentSkills } from "./controllers/agent-skills.ts";
@@ -675,6 +684,10 @@ const lazyActivity = createLazyView(() => import("./views/activity.ts"), notifyL
 const lazyChannels = createLazyView(() => import("./views/channels.ts"), notifyLazyViewChanged);
 const lazyCron = createLazyView(() => import("./views/cron.ts"), notifyLazyViewChanged);
 const lazyDebug = createLazyView(() => import("./views/debug.ts"), notifyLazyViewChanged);
+const lazyAccelerant = createLazyView(
+  () => import("./views/accelerant.ts"),
+  notifyLazyViewChanged,
+);
 const lazyInstances = createLazyView(() => import("./views/instances.ts"), notifyLazyViewChanged);
 const lazyLogs = createLazyView(() => import("./views/logs.ts"), notifyLazyViewChanged);
 const lazyNodes = createLazyView(() => import("./views/nodes.ts"), notifyLazyViewChanged);
@@ -2839,6 +2852,25 @@ export function renderApp(state: AppViewState) {
                   state.activityExpandedIds = next;
                 },
                 onScroll: (event) => state.handleActivityScroll(event),
+              }),
+            )
+          : nothing}
+        ${state.tab === "accelerant"
+          ? renderLazyView(lazyAccelerant, (m) =>
+              m.renderAccelerant({
+                data: state.accelerantData,
+                loading: state.accelerantLoading,
+                error: state.accelerantError,
+                apiUrl: state.settings.accelerantApiUrl ?? "http://127.0.0.1:7317",
+                onRefresh: () => void loadAccelerantControlCenter(state),
+                onStartHuntr: () => void startAccelerantHuntrAttempt(state),
+                onStartGoal: (goal) => void startAccelerantGoal(state, goal),
+                onStartBatch: (items) => void startAccelerantBatch(state, items),
+                onStop: (runId) => void stopAccelerantRun(state, runId),
+                onRetry: (runId) => void retryAccelerantRun(state, runId),
+                onApprove: (runId, grants) => void approveAccelerantRun(state, runId, grants),
+                onSetApiUrl: (value) =>
+                  state.applySettings({ ...state.settings, accelerantApiUrl: value }),
               }),
             )
           : nothing}

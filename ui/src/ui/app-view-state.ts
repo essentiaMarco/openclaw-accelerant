@@ -10,6 +10,7 @@ import type { RealtimeTalkStatus } from "./chat/realtime-talk.ts";
 import type { ChatRunUiStatus } from "./chat/run-lifecycle.ts";
 import type { ChatMessageCache } from "./chat/session-message-cache.ts";
 import type { ChatSideResult } from "./chat/side-result.ts";
+import type { ControlCenterState } from "./controllers/accelerant.ts";
 import type { CronModelSuggestionsState, CronState } from "./controllers/cron.ts";
 import type { DevicePairingList } from "./controllers/devices.ts";
 import type { ExecApprovalRequest } from "./controllers/exec-approval.ts";
@@ -276,6 +277,9 @@ export type AppViewState = {
   presenceEntries: PresenceEntry[];
   presenceError: string | null;
   presenceStatus: string | null;
+  accelerantLoading: boolean;
+  accelerantError: string | null;
+  accelerantData: ControlCenterState | null;
   agentsLoading: boolean;
   agentsList: AgentsListResult | null;
   agentsError: string | null;

@@ -3,8 +3,10 @@ import { roleScopesAllow } from "../../../src/shared/operator-scope-compat.js";
 import { t } from "../i18n/index.ts";
 import { refreshChat } from "./app-chat.ts";
 import {
+  startAccelerantPolling,
   startLogsPolling,
   startNodesPolling,
+  stopAccelerantPolling,
   stopLogsPolling,
   stopNodesPolling,
   startDebugPolling,
@@ -25,6 +27,10 @@ import {
   loadAgentIdentity,
   type AgentIdentityState,
 } from "./controllers/agent-identity.ts";
+import {
+  loadAccelerantControlCenter,
+  type AccelerantState,
+} from "./controllers/accelerant.ts";
 import { loadAgentSkills, type AgentSkillsState } from "./controllers/agent-skills.ts";
 import { loadAgents, type AgentsState } from "./controllers/agents.ts";
 import { loadChannels, type ChannelsState } from "./controllers/channels.ts";
@@ -461,6 +467,10 @@ export async function refreshActiveTab(host: SettingsHost, opts?: { chatStartup?
       case "channels":
         await loadChannelsTab(host);
         break;
+      case "accelerant":
+        startAccelerantPolling(host as unknown as Parameters<typeof startAccelerantPolling>[0]);
+        await loadAccelerantControlCenter(app as unknown as AccelerantState);
+        break;
       case "instances":
         await loadPresence(app);
         break;
@@ -715,6 +725,9 @@ function applyTabSelection(
   );
   (next === "debug" ? startDebugPolling : stopDebugPolling)(
     host as unknown as Parameters<typeof startDebugPolling>[0],
+  );
+  (next === "accelerant" ? startAccelerantPolling : stopAccelerantPolling)(
+    host as unknown as Parameters<typeof startAccelerantPolling>[0],
   );
   if (next !== "workboard") {
     stopWorkboardPolling(host as unknown as Parameters<typeof stopWorkboardPolling>[0]);
