@@ -10,7 +10,7 @@ import {
   type SsrFPolicy,
 } from "../infra/net/ssrf.js";
 import type { AuthRateLimiter } from "./auth-rate-limit.js";
-import type { ResolvedGatewayAuth } from "./auth.js";
+import { isLocalDirectRequest, type ResolvedGatewayAuth } from "./auth.js";
 import { authorizeGatewayHttpRequestOrReply } from "./http-auth-utils.js";
 import type { OpenClawConfig } from "../config/types.openclaw.js";
 
@@ -181,17 +181,24 @@ export async function handleAccelerantHttpRequest(
   res: ServerResponse,
   opts: AccelerantHttpRequestOptions,
 ): Promise<boolean> {
-  // Gateway auth first; short-circuits to allowed when auth.mode === "none".
-  const authorized = await authorizeGatewayHttpRequestOrReply({
-    req,
-    res,
-    auth: opts.auth,
-    trustedProxies: opts.trustedProxies,
-    allowRealIpFallback: opts.allowRealIpFallback,
-    rateLimiter: opts.rateLimiter,
-  });
-  if (!authorized) {
-    return true;
+  // Gateway auth: short-circuits to allowed when auth.mode === "none". Loopback-
+  // direct callers (the same-origin Control UI on localhost) are trusted without a
+  // token, mirroring the gateway's other local-direct exemptions — the proxied
+  // ACCELERANT API is itself loopback-only, and isLocalDirectRequest only trusts a
+  // direct loopback socket with no forwarded headers, so LAN/proxied requests still
+  // require the gateway token.
+  if (!isLocalDirectRequest(req, opts.trustedProxies, opts.allowRealIpFallback)) {
+    const authorized = await authorizeGatewayHttpRequestOrReply({
+      req,
+      res,
+      auth: opts.auth,
+      trustedProxies: opts.trustedProxies,
+      allowRealIpFallback: opts.allowRealIpFallback,
+      rateLimiter: opts.rateLimiter,
+    });
+    if (!authorized) {
+      return true;
+    }
   }
 
   const method = (req.method ?? "GET").toUpperCase();

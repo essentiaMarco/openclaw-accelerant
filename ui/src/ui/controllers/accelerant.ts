@@ -6,7 +6,7 @@
 // ACCELERANT API directly (no CORS), so every request goes through the proxy
 // and carries the configured base URL via the `x-accelerant-base-url` header
 // plus the existing gateway auth header.
-import { resolveControlUiAuthHeader } from "../control-ui-auth.ts";
+import { resolveControlUiAuthCandidates } from "../control-ui-auth.ts";
 
 const ACCELERANT_BASE_URL_HEADER = "x-accelerant-base-url";
 const DEFAULT_ACCELERANT_BASE_URL = "http://127.0.0.1:7317";
@@ -118,20 +118,38 @@ function resolveAccelerantBaseUrl(state: AccelerantState): string {
   return configured && configured.length > 0 ? configured : DEFAULT_ACCELERANT_BASE_URL;
 }
 
-function buildAccelerantHeaders(
+// Same-origin /accelerant fetch with auth-candidate retry. Tries the control-UI
+// shared-secret candidates (deviceToken, settings.token, password) in priority
+// order and retries on 401/403 — mirrors loadControlUiBootstrapConfig so the
+// ACCELERANT tab recovers when the first credential is stale but the live session
+// is authenticated via another. Always carries the base-URL routing header. Falls
+// back to a single unauthenticated attempt on auth-disabled deployments.
+async function accelerantFetch(
   state: AccelerantState,
-  extra?: Record<string, string>,
-): Record<string, string> {
-  const headers: Record<string, string> = {
-    Accept: "application/json",
-    [ACCELERANT_BASE_URL_HEADER]: resolveAccelerantBaseUrl(state),
-    ...(extra ?? {}),
-  };
-  const authorization = resolveControlUiAuthHeader(state);
-  if (authorization) {
-    headers.Authorization = authorization;
+  path: string,
+  init: { method: string; body?: string; extraHeaders?: Record<string, string> },
+): Promise<Response> {
+  const candidates = resolveControlUiAuthCandidates(state);
+  const attempts = candidates.length > 0 ? candidates : [""];
+  let response: Response | null = null;
+  for (const candidate of attempts) {
+    const headers: Record<string, string> = {
+      Accept: "application/json",
+      [ACCELERANT_BASE_URL_HEADER]: resolveAccelerantBaseUrl(state),
+      ...(init.extraHeaders ?? {}),
+      ...(candidate ? { Authorization: `Bearer ${candidate}` } : {}),
+    };
+    response = await fetch(path, {
+      method: init.method,
+      headers,
+      credentials: "same-origin",
+      ...(init.body !== undefined ? { body: init.body } : {}),
+    });
+    if (response.ok || (response.status !== 401 && response.status !== 403)) {
+      break;
+    }
   }
-  return headers;
+  return response as Response;
 }
 
 function notify(state: AccelerantState): void {
@@ -177,10 +195,7 @@ export async function loadAccelerantControlCenter(state: AccelerantState): Promi
   state.accelerantError = null;
   notify(state);
   try {
-    const response = await fetch("/accelerant/control-center", {
-      method: "GET",
-      headers: buildAccelerantHeaders(state),
-    });
+    const response = await accelerantFetch(state, "/accelerant/control-center", { method: "GET" });
     const body = (await response.json().catch(() => null)) as unknown;
     if (!response.ok) {
       state.accelerantData = null;
@@ -217,10 +232,10 @@ async function postAndRefresh(
   notify(state);
   let postError: string | null = null;
   try {
-    const response = await fetch(path, {
+    const response = await accelerantFetch(state, path, {
       method: "POST",
-      headers: buildAccelerantHeaders(state, { "Content-Type": "application/json" }),
       body: JSON.stringify(body ?? {}),
+      extraHeaders: { "Content-Type": "application/json" },
     });
     if (!response.ok) {
       const parsed = (await response.json().catch(() => null)) as unknown;
